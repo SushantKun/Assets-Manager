@@ -3,6 +3,7 @@ import cors from 'cors';
 import { AppDataSource } from './data-source';
 import assetsRouter from './routes/assets.routes';
 import authRouter from './routes/auth.routes';
+import userRouter from './routes/user.routes';
 import categoriesRouter from './routes/categories.routes';
 import tagsRouter from './routes/tags.routes';
 import * as dotenv from 'dotenv';
@@ -18,6 +19,7 @@ app.use(express.json());
 // Routes
 app.use('/api/assets', assetsRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/users', userRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/tags', tagsRouter);
 

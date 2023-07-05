@@ -149,10 +149,11 @@ export class AssetController {
     // Delete asset
     async delete(req: RequestWithUser, res: Response): Promise<void> {
         try {
-            const { id } = req.params;
+            const assetId = parseInt(req.params.id);
+            const userId = req.user?.userId;
+
             const asset = await this.assetRepository.findOne({
-                where: { id: parseInt(id) },
-                relations: ['owner']
+                where: { id: assetId, owner: { id: userId } }
             });
 
             if (!asset) {
@@ -160,25 +161,16 @@ export class AssetController {
                 return;
             }
 
-            // Check if user owns the asset
-            if (asset.owner.id !== req.user.userId) {
-                res.status(403).json({ message: 'Not authorized to delete this asset' });
-                return;
+            // Delete the file if it exists
+            const existingFile = asset.file_path;
+            if (existingFile && fs.existsSync(path.join(__dirname, '../../uploads', existingFile))) {
+                fs.unlinkSync(path.join(__dirname, '../../uploads', existingFile));
             }
 
-            // Delete file from storage if it exists
-            if (asset.imageUrl && fs.existsSync(path.join(__dirname, '../../uploads', path.basename(asset.imageUrl)))) {
-                fs.unlinkSync(path.join(__dirname, '../../uploads', path.basename(asset.imageUrl)));
-            }
-
-            // Delete from database
             await this.assetRepository.remove(asset);
-
-            res.status(200).json({ message: 'Asset deleted successfully' });
+            res.json({ message: 'Asset deleted successfully' });
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            }
+            console.error('Error deleting asset:', error);
             res.status(500).json({ message: 'Internal server error' });
         }
     }
@@ -186,13 +178,14 @@ export class AssetController {
     // Update asset
     async update(req: RequestWithUser, res: Response): Promise<void> {
         try {
-            const { id } = req.params;
-            const { name, description, serialNumber, purchasePrice, purchaseDate, location, categoryId } = req.body;
-            const file = req.file;
+            const assetId = parseInt(req.params.id);
+            const userId = req.user?.userId;
+            const { name, description, serialNumber, category: categoryId } = req.body;
 
+            // Find the asset
             const asset = await this.assetRepository.findOne({
-                where: { id: parseInt(id) },
-                relations: ['owner']
+                where: { id: assetId, owner: { id: userId } },
+                relations: ['category']
             });
 
             if (!asset) {
@@ -200,69 +193,39 @@ export class AssetController {
                 return;
             }
 
-            // Check if user owns the asset
-            if (asset.owner.id !== req.user.userId) {
-                res.status(403).json({ message: 'Not authorized to update this asset' });
-                return;
-            }
+            // Update basic fields
+            asset.name = name;
+            asset.description = description;
+            asset.serialNumber = serialNumber;
 
-            // Update file if provided
-            if (file) {
-                // Delete old file if it exists
-                if (asset.imageUrl && fs.existsSync(path.join(__dirname, '../../uploads', path.basename(asset.imageUrl)))) {
-                    fs.unlinkSync(path.join(__dirname, '../../uploads', path.basename(asset.imageUrl)));
-                }
-                
-                // Update with new file info
-                asset.imageUrl = this.getImageUrl(file.filename);
-            }
-
-            // Update metadata
-            if (name) asset.name = name;
-            if (description) asset.description = description;
-            if (serialNumber) asset.serialNumber = serialNumber;
-            if (purchasePrice) asset.purchasePrice = parseFloat(purchasePrice);
-            if (purchaseDate) asset.purchaseDate = new Date(purchaseDate);
-            if (location) asset.location = location;
-
+            // Update category if provided
             if (categoryId) {
-                const foundCategory = await this.categoryRepository.findOne({
+                const category = await this.categoryRepository.findOne({
                     where: { id: parseInt(categoryId) }
                 });
-                if (foundCategory) {
-                    asset.category = foundCategory;
+                if (category) {
+                    asset.category = category;
                 }
             }
 
-            // Save changes
-            await this.assetRepository.save(asset);
-
-            res.status(200).json({
-                message: 'Asset updated successfully',
-                asset: {
-                    id: asset.id,
-                    name: asset.name,
-                    description: asset.description,
-                    serialNumber: asset.serialNumber,
-                    purchasePrice: asset.purchasePrice,
-                    purchaseDate: asset.purchaseDate,
-                    location: asset.location,
-                    imageUrl: asset.imageUrl,
-                    createdAt: asset.createdAt,
-                    updatedAt: asset.updatedAt
+            // Handle file upload if provided
+            if (req.file) {
+                // Delete old file if it exists
+                if (asset.file_path && fs.existsSync(path.join(__dirname, '../../uploads', asset.file_path))) {
+                    fs.unlinkSync(path.join(__dirname, '../../uploads', asset.file_path));
                 }
-            });
+
+                // Update file information
+                asset.file_path = req.file.filename;
+                asset.file_type = path.extname(req.file.originalname);
+                asset.mime_type = req.file.mimetype;
+                asset.size = req.file.size;
+            }
+
+            const updatedAsset = await this.assetRepository.save(asset);
+            res.json(updatedAsset);
         } catch (error) {
-            // Delete uploaded file if database operation fails
-            if (file) {
-                if (file.filename && fs.existsSync(path.join(__dirname, '../../uploads', file.filename))) {
-                    fs.unlinkSync(path.join(__dirname, '../../uploads', file.filename));
-                }
-            }
-            
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            }
+            console.error('Error updating asset:', error);
             res.status(500).json({ message: 'Internal server error' });
         }
     }

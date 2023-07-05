@@ -1,0 +1,107 @@
+<div class="profile-container">
+  <!-- Alert Messages -->
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+  <div *ngIf="success" class="alert alert-success">
+    {{ success }}
+  </div>
+
+  <!-- User Profile Section -->
+  <section class="profile-section" *ngIf="userProfile">
+    <h2>Profile Information</h2>
+    
+    <!-- View Mode -->
+    <div class="profile-info" *ngIf="!isEditingProfile">
+      <div class="info-group">
+        <label>Username:</label>
+        <span>{{ userProfile.username }}</span>
+      </div>
+      <div class="info-group">
+        <label>Email:</label>
+        <span>{{ userProfile.email }}</span>
+      </div>
+      <div class="info-group">
+        <label>Name:</label>
+        <span>{{ userProfile.firstName || '-' }} {{ userProfile.lastName || '' }}</span>
+      </div>
+      <div class="actions">
+        <button (click)="startEditingProfile()" class="btn btn-primary">Edit Profile</button>
+        <button (click)="startChangingPassword()" class="btn btn-secondary">Change Password</button>
+      </div>
+    </div>
+
+    <!-- Edit Profile Form -->
+    <form *ngIf="isEditingProfile" class="profile-form" (ngSubmit)="saveProfile()">
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input type="text" id="firstName" name="firstName" [(ngModel)]="editedProfile.firstName">
+      </div>
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input type="text" id="lastName" name="lastName" [(ngModel)]="editedProfile.lastName">
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" [(ngModel)]="editedProfile.email">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="loading">Save Changes</button>
+        <button type="button" class="btn btn-secondary" (click)="cancelEditingProfile()">Cancel</button>
+      </div>
+    </form>
+
+    <!-- Change Password Form -->
+    <form *ngIf="isChangingPassword" class="password-form" (ngSubmit)="changePassword()">
+      <h3>Change Password</h3>
+      <div class="form-group">
+        <label for="currentPassword">Current Password</label>
+        <input type="password" id="currentPassword" name="currentPassword" [(ngModel)]="passwordForm.currentPassword">
+      </div>
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <input type="password" id="newPassword" name="newPassword" [(ngModel)]="passwordForm.newPassword">
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm New Password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" [(ngModel)]="passwordForm.confirmPassword">
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="loading">Change Password</button>
+        <button type="button" class="btn btn-secondary" (click)="cancelChangingPassword()">Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Assets Section -->
+  <section class="assets-section">
+    <h2>My Assets</h2>
+
+    <div *ngIf="loading" class="loading-spinner">
+      Loading...
+    </div>
+
+    <div *ngIf="!loading && userAssets.length === 0" class="no-assets">
+      <p>You don't have any assets yet.</p>
+    </div>
+
+    <div *ngIf="!loading && userAssets.length > 0" class="assets-grid">
+      <div *ngFor="let asset of userAssets" class="asset-card">
+        <img [src]="asset.imageUrl" [alt]="asset.name" class="asset-image" *ngIf="asset.imageUrl">
+        <div class="asset-info">
+          <h3>{{ asset.name }}</h3>
+          <p>{{ asset.description }}</p>
+          <div class="asset-metadata">
+            <span *ngIf="asset.category">Category: {{ asset.category.name }}</span>
+            <span *ngIf="asset.size">Size: {{ assetService.formatFileSize(asset.size) }}</span>
+            <span *ngIf="asset.createdAt">Added: {{ asset.createdAt | date:'mediumDate' }}</span>
+          </div>
+          <div class="asset-actions">
+            <button class="btn btn-primary" (click)="editAsset(asset)">Edit</button>
+            <button class="btn btn-danger" (click)="deleteAsset(asset)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div> 

@@ -5,6 +5,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { UploadComponent } from './features/assets/components/upload/upload.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import { EditAssetComponent } from './features/assets/components/edit/edit.component';
 
 export const routes: Routes = [
   {
@@ -27,7 +28,8 @@ export const routes: Routes = [
   {
     path: 'assets',
     children: [
-      { path: 'upload', component: UploadComponent, canActivate: [AuthGuard] }
+      { path: 'upload', component: UploadComponent, canActivate: [AuthGuard] },
+      { path: 'edit/:id', component: EditAssetComponent, canActivate: [AuthGuard] }
     ]
   },
   {

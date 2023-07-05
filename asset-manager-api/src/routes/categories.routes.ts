@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
-import { authMiddleware } from '../middleware/auth.middleware';
 import { AppDataSource } from '../data-source';
 import { Category } from '../entities/category.entity';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 const categoryRepository = AppDataSource.getRepository(Category);
@@ -16,17 +16,17 @@ const getAllHandler: RequestHandler = async (req, res, next) => {
     }
 };
 
-// Get category by id
+// Get one category
 const getOneHandler: RequestHandler = async (req, res, next) => {
     try {
         const { id } = req.params;
         const category = await categoryRepository.findOne({
-            where: { id: parseInt(id) },
-            relations: ['assets']
+            where: { id: parseInt(id) }
         });
 
         if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
+            res.status(404).json({ message: 'Category not found' });
+            return;
         }
 
         res.json(category);
@@ -35,11 +35,11 @@ const getOneHandler: RequestHandler = async (req, res, next) => {
     }
 };
 
-// Create new category
+// Create category
 const createHandler: RequestHandler = async (req, res, next) => {
     try {
-        const { name, description } = req.body;
-        const category = categoryRepository.create({ name, description });
+        const { name } = req.body;
+        const category = categoryRepository.create({ name });
         await categoryRepository.save(category);
         res.status(201).json(category);
     } catch (error) {
@@ -51,19 +51,18 @@ const createHandler: RequestHandler = async (req, res, next) => {
 const updateHandler: RequestHandler = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { name, description } = req.body;
+        const { name } = req.body;
 
         const category = await categoryRepository.findOne({
             where: { id: parseInt(id) }
         });
 
         if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
+            res.status(404).json({ message: 'Category not found' });
+            return;
         }
 
-        category.name = name || category.name;
-        category.description = description || category.description;
-
+        category.name = name;
         await categoryRepository.save(category);
         res.json(category);
     } catch (error) {
@@ -80,16 +79,18 @@ const deleteHandler: RequestHandler = async (req, res, next) => {
         });
 
         if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
+            res.status(404).json({ message: 'Category not found' });
+            return;
         }
 
         await categoryRepository.remove(category);
-        res.status(204).send();
+        res.json({ message: 'Category deleted successfully' });
     } catch (error) {
         next(error);
     }
 };
 
+// Routes
 router.get('/', authMiddleware, getAllHandler);
 router.get('/:id', authMiddleware, getOneHandler);
 router.post('/', authMiddleware, createHandler);

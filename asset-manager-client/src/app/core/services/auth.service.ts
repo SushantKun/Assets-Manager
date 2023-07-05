@@ -5,23 +5,33 @@ import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
 interface AuthResponse {
   token: string;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-  };
+  user: User;
+}
+
+interface ProfileUpdateData {
+  firstName?: string;
+  lastName?: string;
+  email: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = `${environment.apiUrl}/api/auth`;
+  private apiUrl = `${environment.apiUrl}/api`;
   private tokenKey = 'auth_token';
   private userKey = 'user_data';
-  private userSubject = new BehaviorSubject<any>(null);
+  private userSubject = new BehaviorSubject<User | null>(null);
   private isBrowser: boolean;
 
   constructor(
@@ -73,7 +83,7 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { username, password })
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, { username, password })
       .pipe(
         tap(response => {
           if (this.isBrowser && response.token) {
@@ -86,7 +96,7 @@ export class AuthService {
   }
 
   register(username: string, email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, { username, email, password });
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, { username, email, password });
   }
 
   logout(): void {
@@ -114,24 +124,40 @@ export class AuthService {
     return !!token;
   }
 
-  getCurrentUser(): Observable<any> {
+  getCurrentUser(): Observable<User | null> {
     return this.userSubject.asObservable();
   }
 
-  private getUserFromToken(token: string): any {
+  private getUserFromToken(token: string): User | null {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return {
         id: payload.userId,
-        username: payload.username
+        username: payload.username,
+        email: payload.email
       };
     } catch (e) {
       return null;
     }
   }
 
-  updatePassword(currentPassword: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/update-password`, {
+  updateProfile(profileData: ProfileUpdateData): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/users/profile`, profileData).pipe(
+      tap(updatedUser => {
+        // Update the stored user data
+        if (this.isBrowser) {
+          const currentUser = this.userSubject.value;
+          const mergedUser = { ...currentUser, ...updatedUser };
+          localStorage.setItem(this.userKey, JSON.stringify(mergedUser));
+          this.userSubject.next(mergedUser);
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/users/change-password`, {
       currentPassword,
       newPassword
     }).pipe(

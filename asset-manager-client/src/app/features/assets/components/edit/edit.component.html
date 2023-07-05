@@ -1,0 +1,58 @@
+<div class="edit-container">
+  <h2>Edit Asset</h2>
+
+  <!-- Alert Messages -->
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+  <div *ngIf="success" class="alert alert-success">
+    {{ success }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-spinner">
+    Loading...
+  </div>
+
+  <!-- Edit Form -->
+  <form *ngIf="!loading && asset" (ngSubmit)="onSubmit()" class="edit-form">
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input 
+        type="text" 
+        id="name" 
+        name="name" 
+        [(ngModel)]="editedAsset.name"
+        required>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea 
+        id="description" 
+        name="description" 
+        [(ngModel)]="editedAsset.description"
+        rows="4"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="category">Category</label>
+      <input 
+        type="text" 
+        id="category" 
+        name="category" 
+        [(ngModel)]="editedAsset.category">
+    </div>
+
+    <!-- Current Asset Preview -->
+    <div class="asset-preview" *ngIf="asset.imageUrl">
+      <h3>Current Image</h3>
+      <img [src]="asset.imageUrl" [alt]="asset.name" class="preview-image">
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="loading">Save Changes</button>
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
+</div> 
