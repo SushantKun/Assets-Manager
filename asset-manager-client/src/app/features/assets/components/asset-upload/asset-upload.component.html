@@ -1,0 +1,46 @@
+<div class="container">
+    <div class="header">
+        <h1>Upload New Asset</h1>
+        <button mat-button color="primary" routerLink="/assets">
+            <mat-icon>arrow_back</mat-icon>
+            Back to Assets
+        </button>
+    </div>
+
+    <mat-card>
+        <form [formGroup]="uploadForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline">
+                <mat-label>Title</mat-label>
+                <input matInput formControlName="title" required>
+                <mat-error *ngIf="uploadForm.get('title')?.hasError('required')">
+                    Title is required
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <textarea matInput formControlName="description" rows="4"></textarea>
+            </mat-form-field>
+
+            <div class="file-upload">
+                <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none">
+                <button type="button" mat-stroked-button (click)="fileInput.click()">
+                    <mat-icon>cloud_upload</mat-icon>
+                    Select File
+                </button>
+                <span *ngIf="selectedFile" class="selected-file">
+                    {{ selectedFile.name }}
+                </span>
+            </div>
+
+            <div class="actions">
+                <button mat-raised-button color="primary" type="submit" [disabled]="!uploadForm.valid || !selectedFile || loading">
+                    <mat-icon>upload</mat-icon>
+                    Upload Asset
+                </button>
+            </div>
+        </form>
+
+        <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+    </mat-card>
+</div> 

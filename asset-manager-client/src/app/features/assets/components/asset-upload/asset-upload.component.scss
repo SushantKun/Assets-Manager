@@ -1,0 +1,46 @@
+.container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h1 {
+        margin: 0;
+    }
+}
+
+mat-card {
+    padding: 20px;
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+.file-upload {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .selected-file {
+        color: rgba(0, 0, 0, 0.6);
+    }
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+mat-progress-bar {
+    margin-top: 20px;
+} 

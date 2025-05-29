@@ -1,0 +1,78 @@
+<div class="container">
+    <div class="header">
+        <h1>Asset Details</h1>
+        <button mat-button color="primary" routerLink="/assets">
+            <mat-icon>arrow_back</mat-icon>
+            Back to Assets
+        </button>
+    </div>
+
+    <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+    <mat-card *ngIf="asset && !loading">
+        <div class="asset-content">
+            <div class="preview">
+                <img *ngIf="asset.file_type.startsWith('.jpg') || asset.file_type.startsWith('.png')"
+                    [src]="'http://localhost:3000/' + asset.file_path"
+                    [alt]="asset.title">
+                
+                <mat-icon *ngIf="!asset.file_type.startsWith('.jpg') && !asset.file_type.startsWith('.png')" class="file-icon">
+                    {{ asset.file_type.startsWith('.pdf') ? 'picture_as_pdf' : 'insert_drive_file' }}
+                </mat-icon>
+            </div>
+
+            <div class="details">
+                <h2>{{ asset.title }}</h2>
+                <p *ngIf="asset.description">{{ asset.description }}</p>
+
+                <div class="metadata">
+                    <div class="metadata-item">
+                        <strong>File Type:</strong>
+                        <span>{{ asset.file_type }}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <strong>Size:</strong>
+                        <span>{{ formatFileSize(asset.size) }}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <strong>Upload Date:</strong>
+                        <span>{{ asset.upload_date | date:'medium' }}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <strong>Uploaded By:</strong>
+                        <span>{{ asset.user.username }}</span>
+                    </div>
+                </div>
+
+                <div class="categories" *ngIf="asset.categories?.length">
+                    <strong>Categories:</strong>
+                    <mat-chip-list>
+                        <mat-chip *ngFor="let category of asset.categories">
+                            {{ category.name }}
+                        </mat-chip>
+                    </mat-chip-list>
+                </div>
+
+                <div class="tags" *ngIf="asset.tags?.length">
+                    <strong>Tags:</strong>
+                    <mat-chip-list>
+                        <mat-chip *ngFor="let tag of asset.tags">
+                            {{ tag.name }}
+                        </mat-chip>
+                    </mat-chip-list>
+                </div>
+
+                <div class="actions">
+                    <button mat-raised-button color="primary" (click)="downloadAsset()">
+                        <mat-icon>download</mat-icon>
+                        Download
+                    </button>
+                    <button mat-raised-button color="warn" (click)="deleteAsset()">
+                        <mat-icon>delete</mat-icon>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </mat-card>
+</div> 
